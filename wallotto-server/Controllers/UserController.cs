@@ -1,16 +1,19 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using PocoLayer.Models;
 using ServiceLayer;
-using wallotta_server.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using wallotto_server.Models;
 
-namespace wallotta_server.Controllers
+namespace wallotto_server.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
     public class UserController : ControllerBaseExtended
     {
-        public UserController(IService service, IMapper mapper) : base(service, mapper)
+        public UserController(IConfiguration configuration, IService service, IMapper mapper) : base(configuration, service, mapper)
         {
         }
 
@@ -18,10 +21,15 @@ namespace wallotta_server.Controllers
 
         #endregion
 
+        #region Put Methods
+
+        #endregion
+
         #region Post Methods
 
-        [HttpPut]
-        public IActionResult CreateUser(string userName, string password)
+        [HttpPost]
+        [AllowAnonymous]
+        public UserDTO CreateUser(string userName, string password)
         {
             try
             {
@@ -34,12 +42,62 @@ namespace wallotta_server.Controllers
                 _service.UserRepository.Add(userToCreate);
                 _service.Commit();
 
-                return new JsonResult(_mapper.Map<UserDTO>(userToCreate));
+                return _mapper.Map<UserDTO>(userToCreate);
             }
             catch (Exception ex)
             {
-                return new JsonResult(ex);
+                throw ex;
             }
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public IActionResult LoginUser([FromBody] UserDTO userDTO)
+        {
+            try
+            {
+                User user = _service.UserRepository.GetUser(userDTO.UserName, userDTO.Password);
+
+                if (user is null)
+                    return Unauthorized();
+
+                return Ok(GenerateToken(user));
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private string GenerateToken(User user)
+        {
+            string issuer = _configuration["JwtConfig:validIssuer"];
+            string audience = _configuration["JwtConfig:validAudience"];
+            byte[] key = Encoding.ASCII.GetBytes(_configuration["JwtConfig:secret"]);
+            DateTime expire = DateTime.UtcNow.AddHours(Convert.ToDouble(_configuration["JwtConfig:expiresIn"]));
+
+            SecurityTokenDescriptor securityTokenDescriptor = new()
+            {
+                Claims = new Dictionary<string, object>()
+                {
+                    { "Id", user.Id },
+                    { ClaimTypes.Name, user.UserName }
+                },
+                Expires = expire,
+                Issuer = issuer,
+                Audience = audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(securityTokenDescriptor);
+            var stringToken = tokenHandler.WriteToken(token);
+
+            return stringToken;
         }
 
         #endregion

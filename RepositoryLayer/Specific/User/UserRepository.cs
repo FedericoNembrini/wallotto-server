@@ -9,5 +9,11 @@ namespace RepositoryLayer.Specific
         public UserRepository(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
         }
+
+        public User GetUser(string userName, string password)
+        {
+            return
+                GetAll().SingleOrDefault(u => u.UserName == userName && u.Password == password);
+        }
     }
 }

@@ -1,25 +1,25 @@
+using wallotto_server.Extensions;
+
 internal class Program
 {
     private static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-
         builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.ConfigureJWT(builder.Configuration);
+        builder.Services.ConfigureSwagger();
+        builder.Services.RegisterFilters();
         builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
         ServiceLayer.Bootstrapper.RegisterTypes(
             builder.Services,
-            builder.Configuration.GetConnectionString("DefaultConnection")
+            builder.Configuration
         );
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
@@ -28,6 +28,9 @@ internal class Program
 
         app.UseHttpsRedirection();
 
+        app.UseRouting();
+
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();

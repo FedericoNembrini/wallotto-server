@@ -2,15 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using PocoLayer.Models;
 using ServiceLayer;
-using wallotta_server.Models;
+using wallotto_server.Filters.ActionFilters;
+using wallotto_server.Models;
 
-namespace wallotta_server.Controllers
+namespace wallotto_server.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
     public class CategoryController : ControllerBaseExtended
     {
-        public CategoryController(IService service, IMapper mapper) : base(service, mapper)
+        public CategoryController(IConfiguration configuration, IService service, IMapper mapper) : base(configuration, service, mapper)
         {
         }
 
@@ -20,7 +19,12 @@ namespace wallotta_server.Controllers
 
         #region Put Methods
 
-        [HttpPut]
+        #endregion
+
+        #region Post Methods
+
+        [HttpPost]
+        [ServiceFilter(typeof(IsDataValidFilterAttribute))]
         public IActionResult CreateCategory([FromBody] CategoryDTO categoryDTO)
         {
             try
@@ -40,13 +44,10 @@ namespace wallotta_server.Controllers
 
         #endregion
 
-        #region Post Methods
-
-        #endregion
-
         #region Delete Methods
 
         [HttpDelete]
+        [ServiceFilter(typeof(HasDataFilterAttribute))]
         public IActionResult DeleteCategory([FromBody] CategoryDTO categoryDTO)
         {
             try

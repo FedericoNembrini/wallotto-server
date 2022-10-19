@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using PocoLayer.Models;
-using wallotta_server.Models;
+using wallotto_server.Models;
 
-namespace wallotta_server.Mapper
+namespace wallotto_server.Mapper
 {
     public class UserProfile : Profile
     {

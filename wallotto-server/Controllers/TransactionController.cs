@@ -2,25 +2,46 @@
 using Microsoft.AspNetCore.Mvc;
 using PocoLayer.Models;
 using ServiceLayer;
-using wallotta_server.Models;
+using wallotto_server.Extensions;
+using wallotto_server.Filters.ActionFilters;
+using wallotto_server.Models;
 
-namespace wallotta_server.Controllers
+namespace wallotto_server.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
     public class TransactionController : ControllerBaseExtended
     {
-        public TransactionController(IService service, IMapper mapper) : base(service, mapper)
+        public TransactionController(IConfiguration configuration, IService service, IMapper mapper) : base(configuration, service, mapper)
         {
         }
 
         #region Get Methods
 
+        [HttpGet]
+        public IActionResult GetTranstactions(DateTime? fromDate = null, DateTime? toDate = null)
+        {
+            try
+            {
+                List<TransactionDTO> transactions =
+                    _mapper.Map<List<TransactionDTO>>(_service.TransactionRepository.GetUserTransactions(User.GetIdentityId(), fromDate, toDate));
+
+                return new JsonResult(transactions);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         #endregion
 
         #region Put Methods
 
-        [HttpPut]
+        #endregion
+
+        #region Post Methods
+
+        [HttpPost]
+        [ServiceFilter(typeof(IsDataValidFilterAttribute))]
         public IActionResult CreateTransaction([FromBody] TransactionDTO transactionDTO)
         {
             try
@@ -40,13 +61,10 @@ namespace wallotta_server.Controllers
 
         #endregion
 
-        #region Post Methods
-
-        #endregion
-
         #region Delete Methods
 
         [HttpDelete]
+        [ServiceFilter(typeof(HasDataFilterAttribute))]
         public IActionResult DeleteTransaction([FromBody] TransactionDTO transactionDTO)
         {
             try

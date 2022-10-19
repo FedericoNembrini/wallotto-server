@@ -2,15 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using PocoLayer.Models;
 using ServiceLayer;
-using wallotta_server.Models;
+using wallotto_server.Filters.ActionFilters;
+using wallotto_server.Models;
 
-namespace wallotta_server.Controllers
+namespace wallotto_server.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
     public class WalletController : ControllerBaseExtended
     {
-        public WalletController(IService service, IMapper mapper) : base(service, mapper)
+        public WalletController(IConfiguration configuration, IService service, IMapper mapper) : base(configuration, service, mapper)
         {
         }
 
@@ -21,28 +20,7 @@ namespace wallotta_server.Controllers
         #region Put Methods
 
         [HttpPut]
-        public IActionResult CreateWallet([FromBody] WalletDTO walletDTO)
-        {
-            try
-            {
-                Wallet walletToCreate = _mapper.Map<Wallet>(walletDTO);
-
-                _service.WalletRepository.Add(walletToCreate);
-                _service.Commit();
-
-                return new JsonResult(_mapper.Map<WalletDTO>(walletToCreate));
-            }
-            catch (Exception ex)
-            {
-                return new JsonResult(ex);
-            }
-        }
-
-        #endregion
-
-        #region Post Methods
-
-        [HttpPost]
+        [ServiceFilter(typeof(IsDataValidFilterAttribute))]
         public IActionResult UpdateWallet([FromBody] WalletDTO walletDTO)
         {
             try
@@ -67,9 +45,33 @@ namespace wallotta_server.Controllers
 
         #endregion
 
+        #region Post Methods
+
+        [HttpPost]
+        [ServiceFilter(typeof(IsDataValidFilterAttribute))]
+        public IActionResult CreateWallet([FromBody] WalletDTO walletDTO)
+        {
+            try
+            {
+                Wallet walletToCreate = _mapper.Map<Wallet>(walletDTO);
+
+                _service.WalletRepository.Add(walletToCreate);
+                _service.Commit();
+
+                return new JsonResult(_mapper.Map<WalletDTO>(walletToCreate));
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(ex);
+            }
+        }
+
+        #endregion
+
         #region Delete Methods
 
         [HttpDelete]
+        [ServiceFilter(typeof(HasDataFilterAttribute))]
         public IActionResult DeleteWallet([FromBody] WalletDTO walletDTO)
         {
             try

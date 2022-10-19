@@ -1,4 +1,4 @@
-﻿namespace wallotta_server.Models
+﻿namespace wallotto_server.Models
 {
     public class CategoryDTO
     {

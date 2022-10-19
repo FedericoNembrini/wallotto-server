@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "wallotta_server": {
+    "wallotto_server": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",
